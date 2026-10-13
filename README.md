@@ -62,6 +62,30 @@ Adresse und Vorlage müssen im Heimnetz liegen; die Sprechtoken stehen in keiner
 Prüfzeile im Reiter Test; dort zeigt die Prüfadresse das Aktionstoken nur noch maskiert (Knopf „Adresse
 kopieren“).
 
+## Neu in 0.9.31
+
+Vollausstattung aus dem [LoxBerry-Plugins Musterprojekt](https://github.com/timanders22/LoxBerry-Plugins-Musterprojekt): Der Reiter „Einbindung in
+Loxone“ zeigt drei Baustein-Listen mit drei Bildern und je einer Schritt-für-Schritt-Anleitung –
+„SG Ready, Sperre und Energiemanager“ (40 Zeilen), „Ausfallmeldung“ (3 Zeilen, Nr. 3, 4 und 43) und
+„Werte und Hinweise“ (45 Zeilen) statt bisher einer Liste mit 11 Zeilen.
+
+* **Seite „WaermepumpeCloud“:** Sperre durch den Netzbetreiber oder von Hand (höchstens 2 h), Anlauf bei
+  PV-Überschuss über den Energiemanager oder von Hand, Einschaltempfehlung bei günstigem Strom
+  (`SPOT_RANK` aus dem Plugin Spotpreis aWATTar), Warmwasser-Zwangsladung (`WP_WW_BOOST`, nicht bei
+  Nibe), Auffrischung alle 15 Minuten und ein Status, der den angeforderten neben dem gemeldeten Zustand
+  zeigt. Die bisherigen Zeilen 1–11 bleiben; fünf davon hängen jetzt anders (Energiemanager #5, Anlauf
+  #6, `WP_SGREADY_4` #7, Sperre #8, Normalbetrieb #10).
+* **Seite „WaermepumpeCloud Werte“:** die übrigen 24 Eingänge der Vorlage mit fünf Status, der Meldung
+  „LoxBerry antwortet nicht“, einem Betriebshinweis (Takten, Spreizung) und der Meldung „Arbeitszahl
+  niedrig“. Die Liste nennt zwei offene Punkte: Bei Daikin liest das Plugin für den Rücklauf bisher
+  denselben Wert wie für den Vorlauf (Spreizung dort immer 0), und bei myVAILLANT ist die Einheit von
+  `WP_STROM`/`WP_WAERME` noch nicht am Gerät geprüft (möglicherweise Wh statt kWh). Das Verhalten ist
+  unverändert.
+* **Vorlagen:** Der Kommentar im Kopf beider Vorlagen kommt jetzt aus der Sprachdatei (englische
+  Oberfläche: englischer Kommentar). Die Titel der Vorlagen und Befehle bleiben fest – an den Namen in
+  Loxone ändert sich nichts.
+* Kein anderes Verhalten geändert. Gerendert unter PHP 7.4, 8.4 und 8.5, nicht am Gerät angesehen.
+
 ## Neu in 0.9.30
 
 Reiter „Einbindung in Loxone“ zeigt ein Bild der Bausteine aus dem gemeinsamen Musterprojekt und
@@ -1003,8 +1027,9 @@ Daikin-Budget leeren noch das MELCloud-Konto aussperren.
    Prüfzeile im Reiter *Test* rot ist.
 6. *Einbindung in Loxone* → beide Vorlagen herunterladen und einlesen.
 
-Die Bausteine der Baustein-Liste aus dem Reiter *Einbindung in Loxone* stehen fertig verbunden auf
-der Seite „WaermepumpeCloud“ im [LoxBerry-Plugins Musterprojekt](https://github.com/timanders22/LoxBerry-Plugins-Musterprojekt),
+Die Bausteine der drei Baustein-Listen aus dem Reiter *Einbindung in Loxone* stehen fertig verbunden auf
+den Seiten „WaermepumpeCloud“, „WaermepumpeCloud Ausfall“ und „WaermepumpeCloud Werte“ im
+[LoxBerry-Plugins Musterprojekt](https://github.com/timanders22/LoxBerry-Plugins-Musterprojekt),
 einer gemeinsamen Projektdatei mit allen Plugin-Seiten und Vorlagen.
 
 ## Zugangsdaten

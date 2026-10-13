@@ -4870,9 +4870,10 @@ function wp_vorlage_ein()
         'title'   => 'Wärmepumpe Cloud',
         'address' => wp_endpunkt('status'),
         'polling' => (string) max(60, (int) $cfg['takt']),
-        'comment' => 'Erzeugt vom LoxBerry-Plugin Wärmepumpe Cloud (' . date('d.m.Y') . '). '
-                   . 'Loxone Config legt beim Import neu an und überschreibt nichts - '
-                   . 'zweimal eingelesen ergibt doppelte Bausteine.',
+        /* Sprachregel 13.10.2026 (Regeln/07, Welle Bild 12 VOLL): Titel fest, der Kommentar kommt
+         * aus der Sprachdatei (deutsch wortgleich wie bis 0.9.30). */
+        'comment' => trim(strip_tags(html_entity_decode(sprintf(wp_t('LOX.VI_KOMMENTAR'), date('d.m.Y')),
+                                                        ENT_QUOTES, 'UTF-8'))),
     ), $cmds));
 }
 
@@ -4919,8 +4920,9 @@ function wp_vorlage_aus()
     return array('VQ_waermepumpe.xml', wp_xml_virtual_out(array(
         'title'   => 'Wärmepumpe SG Ready',
         'address' => 'http://' . $host,
-        'comment' => 'Erzeugt vom LoxBerry-Plugin Wärmepumpe Cloud (' . date('d.m.Y') . '). '
-                   . 'Je Zustand ein Ausgang - immer nur einen gleichzeitig auf 1 setzen.',
+        /* Sprachregel 13.10.2026: Titel fest, Kommentar aus der Sprachdatei (siehe oben). */
+        'comment' => trim(strip_tags(html_entity_decode(sprintf(wp_t('LOX.VQ_KOMMENTAR'), date('d.m.Y')),
+                                                        ENT_QUOTES, 'UTF-8'))),
         'close'   => 1,
         'cmdsep'  => '',
     ), $cmds));

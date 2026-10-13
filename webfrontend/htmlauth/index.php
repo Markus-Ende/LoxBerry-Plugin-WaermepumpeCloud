@@ -984,6 +984,11 @@ if (class_exists('LBWeb', false)) {
 .sm-bild { margin: 12px 0; }
 .sm-bild img { max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px; background: #fff; }
 .sm-bild figcaption { font-size: .9em; color: #555; margin-top: 4px; }
+/* Welle Bild 12 VOLL (0.9.31): Abschnitte, Schritte und Hinweise je Baustein-Liste. */
+.sm-wrap h4.sm-h4 { color: #4f7d17; font-size: 0.98em; font-weight: 700; margin: 22px 0 4px;
+    padding-top: 10px; border-top: 1px solid #e0e0e0; }
+.sm-schritte { margin: 6px 0 0 18px; padding: 0; }
+.sm-schritte li { margin: 3px 0; }
 </style>
 
 <div class="sm-wrap">
@@ -1678,27 +1683,486 @@ if (wp_ww_moeglich($wp_cfg['hersteller'])) { ?>
 
 <h3><?= wp_e(wp_t('LOX.H_BAUSTEINE')) ?></h3>
 <div class="sm-hilfe"><?= wp_t('LOX.BAUSTEINE_TEXT') ?></div>
+<?php
+/* Welle Bild 12 VOLL (0.9.31, Hausherr 11.10.2026: Vollausstattung, ein absoluter Laie soll das
+ * Maximum leicht uebernehmen koennen): zwei Seiten aus dem LoxBerry-Plugins Musterprojekt, dort in
+ * Loxone Config gebaut und mit leitungen_setzen.py verbunden (Musterprojekt/baustein_listen.txt,
+ * Abschnitte "WaermepumpeCloud" 40, "WaermepumpeCloud Ausfall" 3 (Nummern 3, 4, 43 der Hauptseite)
+ * und "WaermepumpeCloud Werte" 45 Zeilen). Je Seite: Ueberschrift,
+ * Kasten "So uebernehmen Sie diese Seite", Tabelle, Hinweise, Bild, Link - alle immer sichtbar. Bis
+ * 0.9.30 stand hier eine Liste mit 11 Zeilen (BAUSTEIN.B1_* bis B11_*).
+ * Titel und Namen der beiden Vorlagen kommen aus DEMSELBEN XML wie die Knoepfe oben
+ * (wp_vorlage_ein(), wp_vorlage_aus()); ein Name, den das XML nicht fuehrt, erscheint in
+ * geschweiften Klammern. Ausnahme WP_WW_BOOST: die Vorlage fuehrt ihn nur, wenn der Hersteller die
+ * Warmwasser-Zwangsladung kann (wp_ww_moeglich()); die Zeile bleibt mit ihrem Hinweis "fehlt beim
+ * Hersteller Nibe" stehen. Texte aus [BAUSTEIN]; jede Zelle ist fertiges, maskiertes HTML.
+ * Zeile: array(Nr, Typ, Name, Parameter, Eingaenge). */
+$wp_bs_vi_v = wp_vorlage_ein();
+$wp_bs_vq_v = wp_vorlage_aus();
+$wp_bs_kopf = function ($xml) {
+    return preg_match('/<Virtual(?:InHttp|Out) [^>]*?Title="([^"]*)"/', $xml, $m)
+        ? html_entity_decode($m[1], ENT_QUOTES | ENT_XML1, 'UTF-8') : '?';
+};
+$wp_bs_titel = function ($xml) {
+    preg_match_all('/<Virtual(?:InHttpCmd|OutCmd) [^>]*?Title="([^"]*)"/', $xml, $m);
+    $aus = array();
+    foreach ($m[1] as $t) { $aus[] = html_entity_decode($t, ENT_QUOTES | ENT_XML1, 'UTF-8'); }
+    return $aus;
+};
+$wp_bs_vi_titel = $wp_bs_kopf($wp_bs_vi_v[1]);
+$wp_bs_vq_titel = $wp_bs_kopf($wp_bs_vq_v[1]);
+$wp_bs_vi_namen = $wp_bs_titel($wp_bs_vi_v[1]);
+$wp_bs_vq_namen = $wp_bs_titel($wp_bs_vq_v[1]);
+$wp_bs_vi = function ($feld) use ($wp_bs_vi_namen) {
+    $n = 'WP_' . $feld;
+    return in_array($n, $wp_bs_vi_namen, true) ? $n : '{' . $n . '}';
+};
+$wp_bs_vq = function ($n) use ($wp_bs_vq_namen) {
+    return (in_array($n, $wp_bs_vq_namen, true) || $n === 'WP_WW_BOOST') ? $n : '{' . $n . '}';
+};
+$wp_bs_mono = function ($s) { return '<span class="sm-mono">' . wp_e($s) . '</span>'; };
+$wp_bs_m = '&mdash;';
+$wp_bs_seiten = array(
+    array('kopf' => 'BL_STEUERN', 'seite' => 'WaermepumpeCloud', 'bild' => 'einbindung_loxone.png', 'zeilen' => array(
+        array(1, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI_GERAET'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi_titel),
+              wp_e(wp_t('BAUSTEIN.S1_01_PARAM')),
+              $wp_bs_m),
+        array(2, wp_e(wp_t('BAUSTEIN.T_STATUS')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_02_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_02_PARAM')),
+              'V1 = ' . wp_e($wp_bs_vi('STUFE'))),
+        array(5, wp_e(wp_t('BAUSTEIN.T_EM')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_05_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_05_PARAM')),
+              'Gpwr = #17, Ppwr = #19, Spwr = #21, Soc = #22'),
+        array(6, wp_e(wp_t('BAUSTEIN.T_ODER')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_06_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_06_PARAM')),
+              'I1 = ' . wp_e(sprintf(wp_t('BAUSTEIN.E_AUSGANG'), 'OL1', 5)) . ', I2 = #27'),
+        array(7, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VQ_GERAET'), $wp_bs_vq_titel)),
+              $wp_bs_mono($wp_bs_vq('WP_SGREADY_4')),
+              wp_e(wp_t('BAUSTEIN.S1_07_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #30'),
+        array(8, wp_e(wp_t('BAUSTEIN.T_MONOFLOP')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_08_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_08_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #14, Reset = #15'),
+        array(9, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VQ_GERAET'), $wp_bs_vq_titel)),
+              $wp_bs_mono($wp_bs_vq('WP_SGREADY_1')),
+              wp_e(wp_t('BAUSTEIN.S1_09_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #8'),
+        array(10, wp_e(wp_t('BAUSTEIN.T_UND')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_10_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_10_PARAM')),
+              'I1 = #37 ' . wp_e(wp_t('BAUSTEIN.E_NEG')) . ', I2 = #8 ' . wp_e(wp_t('BAUSTEIN.E_NEG'))),
+        array(11, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VQ_GERAET'), $wp_bs_vq_titel)),
+              $wp_bs_mono($wp_bs_vq('WP_SGREADY_2')),
+              wp_e(wp_t('BAUSTEIN.S1_11_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #10'),
+        array(12, wp_e(wp_t('BAUSTEIN.T_VSCHALTER')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_12_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_12_PARAM')),
+              $wp_bs_m),
+        array(13, wp_e(wp_t('BAUSTEIN.T_VTASTE')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_13_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_13_PARAM')),
+              $wp_bs_m),
+        array(14, wp_e(wp_t('BAUSTEIN.T_ODER')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_14_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_14_PARAM')),
+              'I1 = #12, I2 = #13'),
+        array(15, wp_e(wp_t('BAUSTEIN.T_VTASTE')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_15_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_15_PARAM')),
+              $wp_bs_m),
+        array(16, wp_e(wp_t('BAUSTEIN.T_VEIN')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_16_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_16_PARAM')),
+              $wp_bs_m),
+        array(17, wp_e(wp_t('BAUSTEIN.T_FORMEL')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_17_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_17_PARAM')),
+              'I1 = #16'),
+        array(18, wp_e(wp_t('BAUSTEIN.T_VEIN')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_18_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_18_PARAM')),
+              $wp_bs_m),
+        array(19, wp_e(wp_t('BAUSTEIN.T_FORMEL')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_19_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_19_PARAM')),
+              'I1 = #18'),
+        array(20, wp_e(wp_t('BAUSTEIN.T_VEIN')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_20_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_20_PARAM')),
+              $wp_bs_m),
+        array(21, wp_e(wp_t('BAUSTEIN.T_FORMEL')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_21_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_21_PARAM')),
+              'I1 = #20'),
+        array(22, wp_e(wp_t('BAUSTEIN.T_VEIN')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_22_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_22_PARAM')),
+              $wp_bs_m),
+        array(23, wp_e(wp_t('BAUSTEIN.T_VSCHALTER')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_23_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_23_PARAM')),
+              $wp_bs_m),
+        array(24, wp_e(wp_t('BAUSTEIN.T_ODER')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_24_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_24_PARAM')),
+              'I1 = ' . wp_e(sprintf(wp_t('BAUSTEIN.E_AUSGANG'), 'OL2', 5)) . ', I2 = #23'),
+        array(25, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VQ'), $wp_bs_vq_titel)),
+              $wp_bs_mono($wp_bs_vq('WP_WW_BOOST')),
+              wp_e(wp_t('BAUSTEIN.S1_25_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #24'),
+        array(26, wp_e(wp_t('BAUSTEIN.T_VTASTE')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_26_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_26_PARAM')),
+              $wp_bs_m),
+        array(27, wp_e(wp_t('BAUSTEIN.T_MONOFLOP')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_27_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_27_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #26'),
+        array(28, wp_e(wp_t('BAUSTEIN.T_UND')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_28_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_28_PARAM')),
+              'I1 = #6, I2 = #8 ' . wp_e(wp_t('BAUSTEIN.E_NEG'))),
+        array(29, wp_e(wp_t('BAUSTEIN.T_IMPULS')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_29_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_29_PARAM')),
+              $wp_bs_m),
+        array(30, wp_e(wp_t('BAUSTEIN.T_UND')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_30_NAME')),
+              $wp_bs_m,
+              'I1 = #28, I2 = ' . wp_e(sprintf(wp_t('BAUSTEIN.E_AUSGANG'), 'Q', 29)) . ' ' . wp_e(wp_t('BAUSTEIN.E_NEG'))),
+        array(31, wp_e(wp_t('BAUSTEIN.T_SPOT')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_31_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_31_PARAM')),
+              $wp_bs_m),
+        array(32, wp_e(wp_t('BAUSTEIN.T_GROESSER')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_32_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_32_PARAM')),
+              'I1 = #31'),
+        array(33, wp_e(wp_t('BAUSTEIN.T_KLEINERGLEICH')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_33_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_33_PARAM')),
+              'I1 = #31'),
+        array(34, wp_e(wp_t('BAUSTEIN.T_UND')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_34_NAME')),
+              $wp_bs_m,
+              'I1 = #32, I2 = #33'),
+        array(35, wp_e(wp_t('BAUSTEIN.T_VSCHALTER')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_35_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_35_PARAM')),
+              $wp_bs_m),
+        array(36, wp_e(wp_t('BAUSTEIN.T_UND')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_36_NAME')),
+              $wp_bs_m,
+              'I1 = #34, I2 = #35'),
+        array(37, wp_e(wp_t('BAUSTEIN.T_ODER')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_37_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_37_PARAM')),
+              'I1 = #6, I2 = #36'),
+        array(38, wp_e(wp_t('BAUSTEIN.T_UND')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_38_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_38_PARAM')),
+              'I1 = #36, I2 = #6 ' . wp_e(wp_t('BAUSTEIN.E_NEG'))),
+        array(39, wp_e(wp_t('BAUSTEIN.T_UND')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_39_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_39_PARAM')),
+              'I1 = #38, I2 = #8 ' . wp_e(wp_t('BAUSTEIN.E_NEG'))),
+        array(40, wp_e(wp_t('BAUSTEIN.T_UND')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_40_NAME')),
+              $wp_bs_m,
+              'I1 = #39, I2 = ' . wp_e(sprintf(wp_t('BAUSTEIN.E_AUSGANG'), 'Q', 29)) . ' ' . wp_e(wp_t('BAUSTEIN.E_NEG'))),
+        array(41, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VQ'), $wp_bs_vq_titel)),
+              $wp_bs_mono($wp_bs_vq('WP_SGREADY_3')),
+              wp_e(wp_t('BAUSTEIN.S1_41_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #40'),
+        array(42, wp_e(wp_t('BAUSTEIN.T_STATUS')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S1_42_NAME')),
+              wp_e(wp_t('BAUSTEIN.S1_42_PARAM')),
+              'V1 = #8, V2 = #28, V3 = #39, V4 = ' . wp_e($wp_bs_vi('STUFE'))),
+        ),
+        'schritte' => array(
+            wp_e(sprintf(wp_t('BAUSTEIN.S1_SCHRITT1'), wp_t('REITER.EINSTELLUNGEN'), wp_t('REITER.TEST'), wp_t('TEST.K_GERAETE'), wp_t('TEST.K_ABRUF'))),
+            wp_e(sprintf(wp_t('BAUSTEIN.S1_SCHRITT2'), wp_t('REITER.SGREADY'), wp_t('SG.L_EIN'))),
+            wp_e(sprintf(wp_t('BAUSTEIN.S1_SCHRITT3'), wp_t('LOX.H_VORLAGE'), wp_t('LOX.K_VORLAGE_EIN'), wp_t('LOX.K_VORLAGE_AUS'))),
+            wp_e(sprintf(wp_t('BAUSTEIN.S1_SCHRITT4'), $wp_bs_vi_v[0], $wp_bs_vq_v[0])),
+            wp_e(sprintf(wp_t('BAUSTEIN.S1_SCHRITT5'), $wp_bs_vi_titel, $wp_bs_vi('STUFE'), $wp_bs_vq_titel, wp_t('LOX.BL_AUSFALL'))),
+            wp_e(wp_t('BAUSTEIN.S1_SCHRITT6')),
+            wp_e(wp_t('BAUSTEIN.S1_SCHRITT7')),
+            wp_e(sprintf(wp_t('BAUSTEIN.S1_SCHRITT8'), wp_t('LOX.T_VERBINDEN'))),
+            wp_e(sprintf(wp_t('BAUSTEIN.S1_SCHRITT9'), wp_t('LOX.T_PARAMETER'))),
+            wp_e(wp_t('BAUSTEIN.S1_SCHRITT10')),
+            wp_e(wp_t('BAUSTEIN.S1_SCHRITT11')),
+        ),
+        'hinweise' => array(
+            wp_e(wp_t('BAUSTEIN.S1_H1')),
+            wp_e(sprintf(wp_t('BAUSTEIN.S1_H2'), wp_t('REITER.SGREADY'), wp_t('SG.L_SPERRE'), wp_t('SG.L_ANHEBUNG_MAX'))),
+            wp_e(wp_t('BAUSTEIN.S1_H3')),
+            wp_e(sprintf(wp_t('BAUSTEIN.S1_H4'), $wp_bs_vq('WP_WW_BOOST'))),
+            wp_e(wp_t('BAUSTEIN.S1_H5')),
+            wp_e(wp_t('BAUSTEIN.S1_H6')),
+        )),
+    array('kopf' => 'BL_AUSFALL', 'seite' => 'WaermepumpeCloud Ausfall', 'bild' => 'einbindung_loxone_ausfall.png', 'zeilen' => array(
+        array(3, wp_e(wp_t('BAUSTEIN.T_SCHWELLE')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S3_03_NAME')),
+              wp_e(wp_t('BAUSTEIN.S3_03_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = ' . wp_e($wp_bs_vi('ALTER'))),
+        array(4, wp_e(wp_t('BAUSTEIN.T_BENACHR')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S3_04_NAME')),
+              wp_e(wp_t('BAUSTEIN.S3_04_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #43'),
+        array(43, wp_e(wp_t('BAUSTEIN.T_EVZ')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S3_43_NAME')),
+              wp_e(wp_t('BAUSTEIN.S3_43_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #3'),
+        ),
+        'schritte' => array(
+            wp_e(wp_t('BAUSTEIN.S3_SCHRITT1')),
+            wp_e(sprintf(wp_t('BAUSTEIN.S3_SCHRITT2'), $wp_bs_vi_titel, $wp_bs_vi('ALTER'))),
+            wp_e(wp_t('BAUSTEIN.S3_SCHRITT3')),
+            wp_e(sprintf(wp_t('BAUSTEIN.S3_SCHRITT4'), wp_t('LOX.T_VERBINDEN'))),
+            wp_e(sprintf(wp_t('BAUSTEIN.S3_SCHRITT5'), wp_t('REITER.TEST'), wp_t('TEST.F_STOERUNG'))),
+        ),
+        'hinweise' => array(
+            wp_e(wp_t('BAUSTEIN.S3_H1')),
+            wp_e(wp_t('BAUSTEIN.S3_H2')),
+            wp_e(wp_t('BAUSTEIN.S3_H3')),
+            wp_e(wp_t('BAUSTEIN.S3_H4')),
+        )),
+    array('kopf' => 'BL_WERTE', 'seite' => 'WaermepumpeCloud Werte', 'bild' => 'einbindung_loxone_werte.png', 'zeilen' => array(
+        array(1, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('OK')),
+              wp_e(wp_t('BAUSTEIN.S2_01_PARAM')),
+              $wp_bs_m),
+        array(2, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('ALTER')),
+              wp_e(wp_t('BAUSTEIN.S2_02_PARAM')),
+              $wp_bs_m),
+        array(3, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('STOERUNG')),
+              wp_e(wp_t('BAUSTEIN.S2_03_PARAM')),
+              $wp_bs_m),
+        array(4, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('BUDGET')),
+              wp_e(wp_t('BAUSTEIN.S2_04_PARAM')),
+              $wp_bs_m),
+        array(5, wp_e(wp_t('BAUSTEIN.T_STATUS')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_05_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_05_PARAM')),
+              'V1 = #1, V2 = #2, V3 = #3, V4 = #4'),
+        array(6, wp_e(wp_t('BAUSTEIN.T_KONSTANTE')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_06_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_06_PARAM')),
+              $wp_bs_m),
+        array(7, wp_e(wp_t('BAUSTEIN.T_VALID')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_07_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_07_PARAM')),
+              'V = #2, En = #6'),
+        array(8, wp_e(wp_t('BAUSTEIN.T_BENACHR')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_08_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_08_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #7'),
+        array(9, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('AUSSEN')),
+              wp_e(wp_t('BAUSTEIN.S2_09_PARAM')),
+              $wp_bs_m),
+        array(10, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('VORLAUF')),
+              wp_e(wp_t('BAUSTEIN.S2_10_PARAM')),
+              $wp_bs_m),
+        array(11, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('VLSOLL')),
+              wp_e(wp_t('BAUSTEIN.S2_11_PARAM')),
+              $wp_bs_m),
+        array(12, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('RUECKLAUF')),
+              wp_e(wp_t('BAUSTEIN.S2_12_PARAM')),
+              $wp_bs_m),
+        array(13, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('SPREIZUNG')),
+              wp_e(wp_t('BAUSTEIN.S2_13_PARAM')),
+              $wp_bs_m),
+        array(14, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('HEIZKURVE')),
+              wp_e(wp_t('BAUSTEIN.S2_14_PARAM')),
+              $wp_bs_m),
+        array(15, wp_e(wp_t('BAUSTEIN.T_STATUS')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_15_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_15_PARAM')),
+              'V1 = #10, V2 = #11, V3 = #12, V4 = #9, V5 = #13, V6 = #14'),
+        array(16, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('RAUM')),
+              wp_e(wp_t('BAUSTEIN.S2_16_PARAM')),
+              $wp_bs_m),
+        array(17, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('SOLL')),
+              wp_e(wp_t('BAUSTEIN.S2_17_PARAM')),
+              $wp_bs_m),
+        array(18, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('WW')),
+              wp_e(wp_t('BAUSTEIN.S2_18_PARAM')),
+              $wp_bs_m),
+        array(19, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('WWSOLL')),
+              wp_e(wp_t('BAUSTEIN.S2_19_PARAM')),
+              $wp_bs_m),
+        array(20, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('WWZWANG')),
+              wp_e(wp_t('BAUSTEIN.S2_20_PARAM')),
+              $wp_bs_m),
+        array(21, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('EIN')),
+              wp_e(wp_t('BAUSTEIN.S2_21_PARAM')),
+              $wp_bs_m),
+        array(22, wp_e(wp_t('BAUSTEIN.T_STATUS')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_22_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_22_PARAM')),
+              'V1 = #16, V2 = #17, V3 = #18, V4 = #19, V5 = #20'),
+        array(23, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('LEISTUNG')),
+              wp_e(wp_t('BAUSTEIN.S2_23_PARAM')),
+              $wp_bs_m),
+        array(24, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('KOMPRESSOR')),
+              wp_e(wp_t('BAUSTEIN.S2_24_PARAM')),
+              $wp_bs_m),
+        array(25, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('TAKTE')),
+              wp_e(wp_t('BAUSTEIN.S2_25_PARAM')),
+              $wp_bs_m),
+        array(26, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('LAUFZEIT')),
+              wp_e(wp_t('BAUSTEIN.S2_26_PARAM')),
+              $wp_bs_m),
+        array(27, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('LAUFANTEIL')),
+              wp_e(wp_t('BAUSTEIN.S2_27_PARAM')),
+              $wp_bs_m),
+        array(28, wp_e(wp_t('BAUSTEIN.T_STATUS')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_28_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_28_PARAM')),
+              'V1 = #23, V2 = #24, V3 = #25, V4 = #26, V5 = #27'),
+        array(29, wp_e(wp_t('BAUSTEIN.T_SCHWELLE')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_29_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_29_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #26'),
+        array(30, wp_e(wp_t('BAUSTEIN.T_SCHWELLE')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_30_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_30_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #25'),
+        array(31, wp_e(wp_t('BAUSTEIN.T_UND')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_31_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_31_PARAM')),
+              'I1 = #29, I2 = #30'),
+        array(32, wp_e(wp_t('BAUSTEIN.T_EVZ')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_32_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_32_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #31'),
+        array(33, wp_e(wp_t('BAUSTEIN.T_SCHWELLE')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_33_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_33_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #13'),
+        array(34, wp_e(wp_t('BAUSTEIN.T_EVZ')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_34_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_34_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #33'),
+        array(35, wp_e(wp_t('BAUSTEIN.T_ODER')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_35_NAME')),
+              $wp_bs_m,
+              'I1 = #32, I2 = #34'),
+        array(36, wp_e(wp_t('BAUSTEIN.T_BENACHR')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_36_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_36_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #35'),
+        array(37, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('COP')),
+              wp_e(wp_t('BAUSTEIN.S2_37_PARAM')),
+              $wp_bs_m),
+        array(38, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('STROM')),
+              wp_e(wp_t('BAUSTEIN.S2_38_PARAM')),
+              $wp_bs_m),
+        array(39, wp_e(sprintf(wp_t('BAUSTEIN.TYP_VI'), $wp_bs_vi_titel)),
+              $wp_bs_mono($wp_bs_vi('WAERME')),
+              wp_e(wp_t('BAUSTEIN.S2_39_PARAM')),
+              $wp_bs_m),
+        array(40, wp_e(wp_t('BAUSTEIN.T_STATUS')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_40_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_40_PARAM')),
+              'V1 = #37, V2 = #38, V3 = #39'),
+        array(41, wp_e(wp_t('BAUSTEIN.T_SCHWELLE')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_41_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_41_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #37'),
+        array(42, wp_e(wp_t('BAUSTEIN.T_GROESSER')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_42_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_42_PARAM')),
+              'I1 = #37'),
+        array(43, wp_e(wp_t('BAUSTEIN.T_UND')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_43_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_43_PARAM')),
+              'I1 = #41, I2 = #42'),
+        array(44, wp_e(wp_t('BAUSTEIN.T_EVZ')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_44_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_44_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #43'),
+        array(45, wp_e(wp_t('BAUSTEIN.T_BENACHR')),
+              $wp_bs_mono(wp_t('BAUSTEIN.S2_45_NAME')),
+              wp_e(wp_t('BAUSTEIN.S2_45_PARAM')),
+              wp_e(wp_t('BAUSTEIN.E_EINGANG')) . ' = #44'),
+        ),
+        'schritte' => array(
+            wp_e(wp_t('BAUSTEIN.S2_SCHRITT1')),
+            wp_e(sprintf(wp_t('BAUSTEIN.S2_SCHRITT2'), $wp_bs_vi_titel, $wp_bs_vi('STUFE'), $wp_bs_vi('ALTER'))),
+            wp_e(wp_t('BAUSTEIN.S2_SCHRITT3')),
+            wp_e(sprintf(wp_t('BAUSTEIN.S2_SCHRITT4'), wp_t('LOX.T_VERBINDEN'))),
+            wp_e(sprintf(wp_t('BAUSTEIN.S2_SCHRITT5'), wp_t('LOX.T_PARAMETER'))),
+            wp_e(sprintf(wp_t('BAUSTEIN.S2_SCHRITT6'), $wp_bs_vi('LEISTUNG'))),
+            wp_e(sprintf(wp_t('BAUSTEIN.S2_SCHRITT7'), wp_t('REITER.TEST'), wp_t('TEST.K_ZEILE'))),
+        ),
+        'hinweise' => array(
+            wp_e(sprintf(wp_t('BAUSTEIN.S2_H1'), wp_t('REITER.TEST'), wp_t('TEST.K_WEGE'))),
+            wp_e(wp_t('BAUSTEIN.S2_H2')),
+            wp_e(wp_t('BAUSTEIN.S2_H3')),
+            wp_e(wp_t('BAUSTEIN.S2_H4')),
+        )),
+);
+?>
+<?php foreach ($wp_bs_seiten as $wp_bs_s) { ?>
+<h4 class="sm-h4"><?= wp_e(wp_t('LOX.' . $wp_bs_s['kopf'])) ?></h4>
+<div class="sm-hinweis"><b><?= wp_e(wp_t('BAUSTEIN.SCHRITTE_TITEL')) ?></b>
+<ol class="sm-schritte">
+<?php foreach ($wp_bs_s['schritte'] as $wp_bs_x) { ?>
+<li><?= $wp_bs_x ?></li>
+<?php } ?>
+</ol></div>
+<div class="sm-breit">
 <table class="sm-tbl">
 <tr><th>#</th><th><?= wp_e(wp_t('LOX.T_BAUSTEIN')) ?></th><th><?= wp_e(wp_t('LOX.T_NAME')) ?></th>
     <th><?= wp_e(wp_t('LOX.T_PARAMETER')) ?></th><th><?= wp_e(wp_t('LOX.T_VERBINDEN')) ?></th></tr>
-<?php /* Welle Bild 4 (0.9.30, Entscheidung A): die Liste ist die im LoxBerry-Plugins
-         Musterprojekt in Loxone Config gebaute und mit leitungen_setzen.py verbundene
-         (Musterprojekt/baustein_listen.txt, Abschnitt WaermepumpeCloud) - eine Zeile =
-         ein Baustein, nur die Hauptvariante; bis 0.9.29 neun Zeilen. */ ?>
-<?php for ($wp_b = 1; $wp_b <= 11; $wp_b++) { ?>
-<tr><td><?= $wp_b ?></td><td><?= wp_t('BAUSTEIN.B' . $wp_b . '_TYP') ?></td>
-    <td><span class="sm-mono"><?= wp_t('BAUSTEIN.B' . $wp_b . '_NAME') ?></span></td>
-    <td><?= wp_t('BAUSTEIN.B' . $wp_b . '_PARAM') ?></td>
-    <td><?= wp_t('BAUSTEIN.B' . $wp_b . '_VERB') ?></td></tr>
+<?php foreach ($wp_bs_s['zeilen'] as $wp_bs_z) { ?>
+<tr><td><?= (int) $wp_bs_z[0] ?></td><td><?= $wp_bs_z[1] ?></td><td><?= $wp_bs_z[2] ?></td>
+    <td><?= $wp_bs_z[3] ?></td><td><?= $wp_bs_z[4] ?></td></tr>
 <?php } ?>
 </table>
-<div class="sm-hinweis"><?= wp_t('LOX.BAUSTEINE_ERLAEUTERUNG') ?><br><?= wp_t('LOX.BAUSTEINE_EIGENE') ?><br><?= wp_t('LOX.BAUSTEINE_OL1') ?></div>
-<div class="sm-hilfe"><?= wp_e(wp_t('DURCHSAGE.BAUSTEIN')) ?></div>
+</div>
+<div class="sm-warnung"><b><?= wp_e(wp_t('BAUSTEIN.HINWEISE_TITEL')) ?></b>
+<ul class="sm-schritte">
+<?php foreach ($wp_bs_s['hinweise'] as $wp_bs_x) { ?>
+<li><?= $wp_bs_x ?></li>
+<?php } ?>
+</ul></div>
 <figure class="sm-bild">
-<img src="einbindung_loxone.png" alt="<?= wp_e(wp_t('LOX.BILD_ALT')) ?>" loading="lazy">
-<figcaption><?= wp_e(wp_t('LOX.BILD_UNTERSCHRIFT')) ?></figcaption>
+<img src="<?= wp_e($wp_bs_s['bild']) ?>" alt="<?= wp_e(sprintf(wp_t('LOX.BILD_ALT'), $wp_bs_s['seite'])) ?>" loading="lazy">
+<figcaption><?= wp_e(sprintf(wp_t('LOX.BILD_UNTERSCHRIFT'), $wp_bs_s['seite'])) ?></figcaption>
 </figure>
 <p class="sm-hilfe"><?= wp_t('LOX.MUSTERPROJEKT') ?></p>
+<?php } ?>
+<div class="sm-hilfe"><?= wp_e(wp_t('DURCHSAGE.BAUSTEIN')) ?></div>
 
 <div class="sm-step"><b><?= wp_e(wp_t('LOX.H_GEGENPROBE')) ?></b><br><?= wp_t('LOX.GEGENPROBE') ?></div>
 </div>
