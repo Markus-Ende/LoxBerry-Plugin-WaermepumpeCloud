@@ -1,0 +1,16 @@
+# Syntaxpruefung fuer jeden Pull Request und jeden Push auf master.
+name: Pruefen
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP-Syntax pruefen
+        run: |
+          find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l

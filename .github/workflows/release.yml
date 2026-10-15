@@ -1,0 +1,60 @@
+# Baut beim Pushen eines Tags v<Fassung> das Installationsarchiv und legt ein
+# GitHub-Release mit dem ZIP als Anhang an.
+#
+# Ablauf fuer ein Release:
+#   1. VERSION in plugin.cfg, release.cfg und prerelease.cfg anheben,
+#      ARCHIVEURL und INFOURL in beiden cfg auf den neuen Tag setzen.
+#   2. Auf master zusammenfuehren.
+#   3. git tag v<Fassung> && git push origin v<Fassung>
+#
+# Der Lauf bricht ab, wenn Tag, Fassungen und Adressen nicht zusammenpassen -
+# sonst zeigte das Auto-Update auf ein Archiv, das es nicht gibt.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fassungen und Adressen pruefen
+        run: |
+          fassung="${GITHUB_REF_NAME#v}"
+          echo "FASSUNG=$fassung" >> "$GITHUB_ENV"
+          fehler=0
+          for f in plugin.cfg release.cfg prerelease.cfg; do
+            v=$(grep -m1 '^VERSION=' "$f" | cut -d= -f2 | tr -d '\r')
+            if [ "$v" != "$fassung" ]; then
+              echo "::error file=$f::VERSION=$v, der Tag sagt $fassung"; fehler=1
+            fi
+          done
+          archiv="https://github.com/${GITHUB_REPOSITORY}/releases/download/v${fassung}/waermepumpe-${fassung}.zip"
+          for f in release.cfg prerelease.cfg; do
+            if ! grep -qx "ARCHIVEURL=${archiv}" "$f"; then
+              echo "::error file=$f::ARCHIVEURL muss ${archiv} sein"; fehler=1
+            fi
+          done
+          exit $fehler
+
+      - name: PHP-Syntax pruefen
+        run: |
+          find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
+
+      - name: Archiv bauen
+        # git archive beachtet export-ignore aus .gitattributes - .github
+        # gehoert nicht auf den LoxBerry.
+        run: git archive --format=zip -o "waermepumpe-${FASSUNG}.zip" HEAD
+
+      - name: Release anlegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "waermepumpe-${FASSUNG}.zip" \
+            --verify-tag --title "Wärmepumpe Cloud ${FASSUNG}" --generate-notes
