@@ -1,11 +1,15 @@
-# Baut beim Pushen eines Tags v<Fassung> das Installationsarchiv und legt ein
-# GitHub-Release mit dem ZIP als Anhang an.
+# Baut beim Pushen eines Fork-Tags das Installationsarchiv und legt ein
+# GitHub-Release mit dem ZIP als Anhang an. Fassungsschema: siehe FORK.md.
+#
+# Nur VIERTEILIGE Tags (v0.9.31.1) loesen aus. Das Original vergibt nur
+# dreiteilige (v0.9.31) - die liegen auch in diesem Fork und duerfen nie ein
+# Release anstossen.
 #
 # Ablauf fuer ein Release:
 #   1. VERSION in plugin.cfg, release.cfg und prerelease.cfg anheben,
 #      ARCHIVEURL und INFOURL in beiden cfg auf den neuen Tag setzen.
 #   2. Auf master zusammenfuehren.
-#   3. git tag v<Fassung> && git push origin v<Fassung>
+#   3. git tag v<Fassung> && git push origin v<Fassung>   (z. B. v0.9.31.1)
 #
 # Der Lauf bricht ab, wenn Tag, Fassungen und Adressen nicht zusammenpassen -
 # sonst zeigte das Auto-Update auf ein Archiv, das es nicht gibt.
@@ -13,7 +17,7 @@ name: Release
 
 on:
   push:
-    tags: ['v*']
+    tags: ['v[0-9]+.[0-9]+.[0-9]+.[0-9]+']
 
 permissions:
   contents: write
