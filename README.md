@@ -62,6 +62,11 @@ Adresse und Vorlage müssen im Heimnetz liegen; die Sprechtoken stehen in keiner
 Prüfzeile im Reiter Test; dort zeigt die Prüfadresse das Aktionstoken nur noch maskiert (Knopf „Adresse
 kopieren“).
 
+## Neu in 0.9.32
+
+Einbindung in Loxone: Eingang En der Analogwertvalidierung nicht negieren (Hinweis und Bild); ohne diese
+Korrektur löste die Ausfallmeldung nie aus. Wer die Seite schon gebaut hat: Haken bei ‚En‘ entfernen.
+
 ## Neu in 0.9.31
 
 Vollausstattung aus dem [LoxBerry-Plugins Musterprojekt](https://github.com/timanders22/LoxBerry-Plugins-Musterprojekt): Der Reiter „Einbindung in

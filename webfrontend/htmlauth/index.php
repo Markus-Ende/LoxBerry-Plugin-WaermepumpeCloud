@@ -2128,6 +2128,7 @@ $wp_bs_seiten = array(
             wp_e(sprintf(wp_t('BAUSTEIN.S2_H1'), wp_t('REITER.TEST'), wp_t('TEST.K_WEGE'))),
             wp_e(wp_t('BAUSTEIN.S2_H2')),
             wp_e(wp_t('BAUSTEIN.S2_H3')),
+            wp_e(wp_t('BAUSTEIN.S2_H3_EN')),
             wp_e(wp_t('BAUSTEIN.S2_H4')),
         )),
 );
